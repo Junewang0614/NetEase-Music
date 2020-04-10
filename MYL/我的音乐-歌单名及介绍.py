@@ -7,7 +7,8 @@ import csv
 class WangYiYun(object):
     def __init__(self, url):
         self.url = url
-        self.driver = webdriver.Firefox()
+        #self.driver = webdriver.Firefox()
+        self.driver = webdriver.Chrome()
 
     def getContent(self):
         # 打开网址
