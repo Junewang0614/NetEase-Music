@@ -1,7 +1,6 @@
 from selenium import webdriver
-import csv
-import time
 import re
+import csv
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import PIL.Image as image
@@ -11,7 +10,7 @@ import PIL.Image as image
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-
+#提取歌名
 def cleanSongname(contents):
 	datas = re.findall("(.*?)\n", contents, re.S)
 	content = ""
@@ -22,7 +21,7 @@ def cleanSongname(contents):
 			content += data
 	return content
 
-
+#提取歌手名
 def cleanHunmanname(contents):
 	datas = re.findall("(.*?)\n", contents, re.S)
 	content = ""
@@ -50,7 +49,7 @@ class WangYiYun(object):
 		self.driver.switch_to.frame(iframe_element)
 
 		names = []
-		with open("我喜欢的音乐.csv", "w", newline='', encoding='utf-8') as f:
+		with open("我喜欢的音乐.csv", "w", newline='', encoding='utf-8-sig') as f:
 			csv_writer = csv.writer(f)
 			csv_writer.writerow(['歌名', '歌手'])
 			try:
@@ -71,33 +70,32 @@ class WangYiYun(object):
 					# 写入文件
 					csv_writer.writerow([song_name, hunmen_name])
 			except:
-				print("断掉了!")
+				print("爬取结束!")
 		f.close()
 		self.driver.close()
 
+	#绘图
 	def Draw(self):
 		for name in self.names:
 			if self.names.count(name) > 0:
 				self.count[name] = self.names.count(name)
+		#按歌手出现的次数由大到小排序
 		self.count = sorted(self.count.items(), key=lambda x: x[1], reverse=True)
-		#print(self.count)
 		x = []
 		y = []
+
+		#取次数最多的前十位歌手
 		temp1 = 0
-		temp2 = 0
 		f1 = open("歌手.txt", "w", encoding='utf-8')
 		if len(self.count) > 10:
 			for i in self.count:
 				if temp1 < 10:
 					x.append(i[0])
 					y.append(i[1])
-				else:
-					temp2 += i[1]
 				temp1 += 1
 				f1.write(i[0])
+				print(i[0])
 				f1.write("\n")
-			x.append("其他")
-			y.append(temp2)
 		else:
 			for i in self.count:
 				x.append(i[0])
@@ -105,23 +103,24 @@ class WangYiYun(object):
 				f1.write(i[0])
 				f1.write("\n")
 
-		#print(x)
-		#print(y)
-
 		# 柱状图
 		plt.figure()
 		plt.bar(range(len(y)), y, tick_label=x)
+		plt.xticks(rotation=30)			#倾斜横坐标
+		plt.savefig("柱状图.png")
 		plt.show()
+
 		# 饼状图
 		plt.figure()
 		plt.pie(y, labels=x, autopct="%1.1f%%", shadow=False, startangle=50)
 		plt.axis('equal')
+		plt.savefig("饼状图.png")
 		plt.show()
 
+	#绘制词云
 	def WC(self):
 		with open("歌手.txt",encoding='utf-8') as fp:
 			text = fp.read()
-			print(text)
 			font = r'C:\Windows\Fonts\simfang.ttf'
 			wordcloud = WordCloud(background_color='white',font_path=font, width=1400, height=1400).generate(text)
 			wordcloud.to_file("词云.jpg")
