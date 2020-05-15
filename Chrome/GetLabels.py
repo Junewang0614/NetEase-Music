@@ -33,7 +33,7 @@ def get_Lables(url):
     result = pat.findall(html)
     return result
     
-f = open('result1_1.txt', 'a', encoding='utf-8')  # 写入文件
+f = open('result1.txt', 'a', encoding='utf-8')  # 写入文件
 url="https://music.163.com/#/user/home?id=78940979"
 links=get(url)
 num=0
