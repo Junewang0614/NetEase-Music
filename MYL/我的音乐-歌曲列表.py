@@ -3,14 +3,14 @@ import re
 import csv
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
-import PIL.Image as image
+import requests
 
 
 # 在图中正常显示中文
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-#提取歌名
+#提取歌名 去掉末尾的换行符
 def cleanSongname(contents):
 	datas = re.findall("(.*?)\n", contents, re.S)
 	content = ""
@@ -21,7 +21,7 @@ def cleanSongname(contents):
 			content += data
 	return content
 
-#提取歌手名
+#提取歌手名	去掉末尾的换行符
 def cleanHunmanname(contents):
 	datas = re.findall("(.*?)\n", contents, re.S)
 	content = ""
@@ -37,9 +37,19 @@ class WangYiYun(object):
 		self.count = {}
 		self.driver = webdriver.Firefox()
 
-	def cleanContent(self, content):
-		datas = re.findall("(.*?)\n(.*?)", content, re.S)
-		print(datas)
+	#找到我喜欢的音乐歌单网址
+	def getUrl(self):
+		# 打开网址
+		self.driver.get(self.url)
+		# 进入内嵌html
+		iframe_element = self.driver.find_element_by_id("g_iframe")
+		self.driver.switch_to.frame(iframe_element)
+		#网页源代码
+		text = self.driver.page_source
+		ac_url="https://music.163.com/#"
+		urls=re.findall(r'.*?class="tit f-thide s-fc0" href="(.*?)" ', text)
+		ac_url=ac_url+urls[0]
+		return ac_url
 
 	def getContent(self):
 		# 打开网址
@@ -67,7 +77,7 @@ class WangYiYun(object):
 					hunmen_name = cleanHunmanname(hunmen_name)
 					print("作者:"+hunmen_name)
 					self.names.append(hunmen_name)
-					# 写入文件
+					# 写入csv文件
 					csv_writer.writerow([song_name, hunmen_name])
 			except:
 				print("爬取结束!")
@@ -94,7 +104,6 @@ class WangYiYun(object):
 					y.append(i[1])
 				temp1 += 1
 				f1.write(i[0])
-				print(i[0])
 				f1.write("\n")
 		else:
 			for i in self.count:
@@ -128,8 +137,13 @@ class WangYiYun(object):
 			plt.show()
 
 if __name__ == '__main__':
-	url = 'https://music.163.com/#/playlist?id=726768097'
-	WYY = WangYiYun(url)
-	WYY.getContent()
-	WYY.Draw()
-	WYY.WC()
+	hun_url=input("请输入用户的网易云音乐网址：")
+	#hun_url="https://music.163.com/#/user/home?id=78940979"
+	WYY1 = WangYiYun(hun_url)
+	url = WYY1.getUrl()
+	print("用户喜欢的音乐网址："+url)
+
+	WYY2 = WangYiYun(url)
+	WYY2.getContent()
+	WYY2.Draw()
+	WYY2.WC()
