@@ -1,0 +1,164 @@
+开发环境/运行环境
+Anaconda - spyder
+
+系统结构/关键技术
+requests库爬取网易云热歌榜单，将爬取结果生成txt文档；将txt文档中的内容用wordcloud/jieba库生成词云，了解大众听歌偏好
+
+使用方法/资源
+第一部分：url定义为爬取热歌榜地址，通过requests和beautifulsoup库中get和find获取歌名信息，print生成榜单，将生成结果转化为txt文档.
+第二部分：open.read()打开txt文档，WordCloud中font_path/background_color设置参数，plt生成词云。
+
+代码方法：
+Web_get.py:
+          函数popsong()爬取热歌榜，函数popsinger爬取热门歌手
+          url定义热歌榜、热门歌手榜的网址，requests.session与requests.post获取网之内信息。前者使用循环直接打印的方式爬取榜单，后者使用字典形式存储榜单后返回并打印字典内容
+          def popsong():
+               Headers={}
+               Url=’http://’
+               Requests/beautifulsoup
+               For i in result
+               Print
+          def popsinger():
+               Headers={}
+               Url/data
+               Requests
+               List
+               Return
+将结果生成txt文件，并将结果以华语、英美、日韩分类计数
+
+Word_cloud.py:
+           函数popsong()生成热歌榜词云，函数popsinger()生成热门歌手榜词云
+           Path_txt获取txt文件，open.read方法读取path_txt
+           wordcloud方法内设置参数，font_path设置字体样式,background_color设置背景颜色，宽和高
+           Plt.方法显示词云
+          def popsong()/popsinger():
+                 Path_txt=r’’
+                 Wordcloud=WordCloud(参数)
+                 Plt.imshow
+                 Plt.axis
+                 Plt.show
+Print_img.py:
+          函数popsong()将第一步计数出的热歌分类生成柱状图，函数popsinger()将第一步计数出的热门歌手分类生成柱状图
+           Name_list设置横轴，num_list设置竖轴
+          Plt.bar设置图表参数
+          Plt.show展示
+          
+
+源代码：
+PART ONE: web_get.py
+
+import requests
+from bs4 import BeautifulSoup
+import json  
+
+def popsong():
+    headers={
+        'Host':'music.163.com',
+        'Referer':'http://music.163.com/',
+        'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36'
+        }
+
+    url='http://music.163.com/discover/toplist'
+    r=requests.session()
+    r=BeautifulSoup(r.get(url,headers=headers).content)
+    result=r.find('ul',{'class':'f-hide'}).find_all('a')
+#print(reslut)
+ 
+    music=[]  #用于接受返回值
+    i=1
+    for mu in result:
+    #print('{}:{}'.format(music.text,music['href']))
+        c='No.{}:{}'.format(i,mu.text)
+        i=i+1
+        music.append(c)
+    
+    music[1]
+    from pprint import pprint  #格式化输出
+    pprint(music)
+
+
+def popsinger():  
+    a_headers = {"Referer": "http://music.163.com/discover/artist"  }
+          #对付防盗链，服务器会识别headers中的referer是不是它自己，如果不是，有的服务器不会响应，所以我们还可以在headers中加入referer
+    url="http://music.163.com/weapi/artist/top?csrf_token="    #在开发者选项找到热门歌手对应的url，请求方式为post
+    data={"params":"uAE0hN7yRCy+plWTUJw7imQQW+wUSFRuVlFD8UTgXNfJTVLzNyqfnLRqSByCjs40san8rbwMfpasdpJRNit6vKkbQE0F7MZEgRPgSEVfXrHIB/wGiyYQ/VIaZnyTql1m",  
+          "encSecKey":"def9762a8c6ff1f3ae1a7ee23cbc095b3dd6c888f28e974ca00f927fd044a48cfdde49af3138aa99fa7da17fdb97809c7d1abd4ddfc40ab7ef3c0e574e56b2d623c0c23af4d08c629087fd5e1996c961af133140dc81b9fb2322aca668a8079c6cd01a0699fc860b2bb0df47b3887d563f1b18e6585198bb5d9c718a5fa92f04"}  
+    #用Requests和urlopen解析歌手页面的POST  
+    req=requests.post(url=url,headers=a_headers,data=data)  #利用Request将headers，dict，data整合成一个对象传入urlopen
+    #Request存在的意义是便于在请求的时候传入一些信息，而urlopen则不
+    req.encoding="utf-8"   
+    #解析所返回的JSON数据  
+    a_data=json.loads(req.text)  #字典，含code,more,artist，其中artist是列表，含歌手名字与ID
+    a_list=a_data["artists"]#刚刚观察返回数据可以知道歌手的信息储存在artists键中  
+    id_list=[]#用一个列表储存所有歌手的id和name  
+    for i in range(len(a_list)):  
+        a_dict = {}#用一个字典储存一个歌手的id和name  
+        a_dict["name"]=a_list[i]["name"]
+        id_list.append(a_dict)  
+    return id_list  
+ 
+if __name__=="__main__":
+    popsong()
+print(popsinger()) 
+
+
+PART TWO: word_cloud.py
+
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt  #绘制图像的模块
+
+def popsong():
+    path_txt=r'C:\Users\lenovo\Desktop\popsong.txt'
+    f = open(path_txt,'r',encoding='UTF-8').read()
+
+
+    wordcloud = WordCloud(
+       #设置字体
+       font_path="C:/Windows/Fonts/simfang.ttf",
+       #设置背景，宽高
+       background_color="white",width=1000,height=880).generate(f)
+
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+def popsinger():
+    path1_txt=r'C:\Users\lenovo\Desktop\popsinger.txt'
+    f1 = open(path1_txt,'r',encoding='UTF-8').read()
+
+
+    wordcloud = WordCloud(
+       #设置字体
+       font_path="C:/Windows/Fonts/simfang.ttf",
+       #设置背景，宽高
+       background_color="white",width=1000,height=880).generate(f1)
+
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+    
+if __name__=="__main__":
+    popsong()
+popsinger() 
+
+
+
+PART THREE: print_img.py
+
+import matplotlib.pyplot as plt  
+
+def popsong():  
+    name_list = ['Chinese','English','The other']  
+    num_list = [92,6,2]  
+    plt.bar(range(len(num_list)), num_list,color='rgb',tick_label=name_list)  
+    plt.show()  
+
+def popsinger():
+    name_list = ['Chinese','English','The other']  
+    num_list = [92,6,2]  
+    plt.bar(range(len(num_list)), num_list,color='rgb',tick_label=name_list)  
+    plt.show()
+    
+if __name__=="__main__":
+    popsong()
+    popsinger()
